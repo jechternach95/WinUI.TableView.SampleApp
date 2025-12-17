@@ -143,6 +143,14 @@
                         <NavigationViewItem Content="External Filtering" />
                     </NavigationViewItem.MenuItems>
                 </NavigationViewItem>
+                <NavigationViewItem Content="Grouping">
+                    <NavigationViewItem.Icon>
+                        <FontIcon Glyph="&#xE8FD;" />
+                    </NavigationViewItem.Icon>
+                    <NavigationViewItem.MenuItems>
+                        <NavigationViewItem Content="Storage Grouping (Files)" />
+                    </NavigationViewItem.MenuItems>
+                </NavigationViewItem>
                 <NavigationViewItem Content="Clipboard Actions">
                     <NavigationViewItem.Icon>
                         <FontIcon Glyph="&#xE8C8;" />

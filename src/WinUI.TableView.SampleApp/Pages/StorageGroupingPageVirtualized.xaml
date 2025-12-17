@@ -1,0 +1,215 @@
+<Page
+    x:Class="WinUI.TableView.SampleApp.Pages.StorageGroupingPageVirtualized"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:tableview="using:WinUI.TableView"
+    xmlns:adapters="using:WinUI.TableView.SampleApp.Adapters"
+    xmlns:local="using:WinUI.TableView.SampleApp.Pages"
+    xmlns:conv="using:WinUI.TableView.SampleApp.Converters"
+    mc:Ignorable="d">
+
+    <Page.Resources>
+        <!-- UI Converters -->
+        <conv:BoolToChevronConverter x:Key="BoolToChevronConverter"/>
+        
+        <!-- Group Header Template for CollectionView grouping -->
+        <DataTemplate x:Key="GroupHeaderTemplate" x:DataType="tableview:ICollectionViewGroup">
+            <Grid Background="{ThemeResource CardBackgroundFillColorDefaultBrush}" 
+                  Padding="16,12"
+                  CornerRadius="4"
+                  Margin="0,4"
+                  BorderThickness="1"
+                  BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}">
+                <StackPanel Orientation="Horizontal" Spacing="12">
+                    <!-- Expand/Collapse Indicator -->
+                    <FontIcon Glyph="{x:Bind IsExpanded, Mode=OneWay, Converter={StaticResource BoolToChevronConverter}}"
+                              FontFamily="Segoe MDL2 Assets"
+                              FontSize="14"
+                              Foreground="{ThemeResource AccentTextFillColorPrimaryBrush}"/>
+                    
+                    <!-- Group Information -->
+                    <TextBlock FontWeight="SemiBold" 
+                              FontSize="14" 
+                              VerticalAlignment="Center">
+                        <Run Text="{x:Bind Group}"/>
+                        <Run Text=" (" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
+                        <Run Text="{x:Bind GroupItems.Count}" 
+                             Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
+                        <Run Text=" items)" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
+                    </TextBlock>
+                </StackPanel>
+            </Grid>
+        </DataTemplate>
+    </Page.Resources>
+
+    <Grid Padding="24" RowSpacing="16">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <!-- Page Header -->
+        <StackPanel Grid.Row="0" Spacing="8">
+            <TextBlock Text="File System Grouping" 
+                       Style="{StaticResource TitleTextBlockStyle}"/>
+            <TextBlock Text="Production-ready file system grouping with high-performance loading and CollectionView virtualization" 
+                       Style="{StaticResource BodyTextBlockStyle}"
+                       Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
+        </StackPanel>
+
+        <!-- Controls -->
+        <Grid Grid.Row="1" ColumnSpacing="12">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="200"/>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="200"/>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
+
+            <TextBlock Grid.Column="0" 
+                       Text="Folder:" 
+                       VerticalAlignment="Center"
+                       Margin="0,0,8,0"/>
+
+            <ComboBox x:Name="FolderComboBox"
+                      Grid.Column="1"
+                      SelectedIndex="0"
+                      SelectionChanged="OnFolderChanged"
+                      HorizontalAlignment="Stretch">
+                <ComboBoxItem Content="Downloads" Tag="Downloads"/>
+                <ComboBoxItem Content="Documents" Tag="Documents"/>
+                <ComboBoxItem Content="Pictures" Tag="Pictures"/>
+                <ComboBoxItem Content="Videos" Tag="Videos"/>
+                <ComboBoxItem Content="Music" Tag="Music"/>
+            </ComboBox>
+
+            <TextBlock Grid.Column="2" 
+                       Text="Group By:" 
+                       VerticalAlignment="Center"
+                       Margin="16,0,8,0"/>
+
+            <ComboBox x:Name="GroupByComboBox"
+                      Grid.Column="3"
+                      SelectedIndex="0"
+                      SelectionChanged="OnGroupByChanged"
+                      HorizontalAlignment="Stretch">
+                <ComboBoxItem Content="Date Modified" Tag="DateModified"/>
+                <ComboBoxItem Content="File Size" Tag="Size"/>
+                <ComboBoxItem Content="File Type" Tag="FileType"/>
+                <ComboBoxItem Content="Name (A-Z)" Tag="Name"/>
+                <ComboBoxItem Content="No Grouping" Tag=""/>
+            </ComboBox>
+
+            <Button Grid.Column="4"
+                    Content="Load Files"
+                    Click="OnLoadFiles"
+                    Style="{StaticResource AccentButtonStyle}"
+                    HorizontalAlignment="Left"
+                    Margin="16,0,0,0"/>
+        </Grid>
+
+        <!-- Loading indicator -->
+        <ProgressBar Grid.Row="2" 
+                     IsIndeterminate="True" 
+                     Visibility="{x:Bind IsLoading, Mode=OneWay}"/>
+
+        <!-- Main Data Table with Grouping -->
+        <tableview:TableView x:Name="StorageTable"
+                            Grid.Row="3"
+                            AutoGenerateColumns="False"
+                            GroupHeaderTemplate="{StaticResource GroupHeaderTemplate}"
+                            Sorting="OnTableSorting"
+                            ClearSorting="OnTableClearSorting"
+                            SelectionMode="Extended"
+                            BorderThickness="1"
+                            BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                            CornerRadius="8">
+
+            <!-- Data Columns -->
+            <tableview:TableView.Columns>
+                <!-- File Name Column with Icon -->
+                <tableview:TableViewTemplateColumn 
+                    Header="Name" 
+                    Tag="Name"
+                    Width="2*"
+                    CanSort="True">
+                    <tableview:TableViewTemplateColumn.CellTemplate>
+                        <DataTemplate x:DataType="adapters:IGroupableItem">
+                            <StackPanel Orientation="Horizontal" 
+                                       Spacing="8" 
+                                       Padding="8,4">
+                                <FontIcon Glyph="{x:Bind FileIcon}" 
+                                         FontFamily="Segoe MDL2 Assets"
+                                         FontSize="16"
+                                         Foreground="{ThemeResource AccentTextFillColorPrimaryBrush}"/>
+                                <TextBlock Text="{x:Bind Name}" 
+                                          VerticalAlignment="Center"/>
+                            </StackPanel>
+                        </DataTemplate>
+                    </tableview:TableViewTemplateColumn.CellTemplate>
+                </tableview:TableViewTemplateColumn>
+
+                <!-- File Type Column -->
+                <tableview:TableViewTextColumn 
+                    Header="Type" 
+                    Tag="ItemType"
+                    Binding="{Binding ItemType}"
+                    Width="*"
+                    CanSort="True"/>
+
+                <!-- File Size Column -->
+                <tableview:TableViewTextColumn 
+                    Header="Size" 
+                    Tag="Size"
+                    Binding="{Binding SizeDisplay}"
+                    Width="*"
+                    CanSort="True"/>
+
+                <!-- Date Modified Column -->
+                <tableview:TableViewTextColumn 
+                    Header="Date Modified" 
+                    Tag="DateModified"
+                    Binding="{Binding DateModifiedDisplay}"
+                    Width="1.5*"
+                    CanSort="True"/>
+
+                <!-- File Extension Column -->
+                <tableview:TableViewTextColumn 
+                    Header="Extension" 
+                    Tag="FileType"
+                    Binding="{Binding FileType}"
+                    Width="*"
+                    CanSort="True"/>
+            </tableview:TableView.Columns>
+        </tableview:TableView>
+
+        <!-- Status bar -->
+        <Grid Grid.Row="4" 
+              Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+              Padding="12,8"
+              CornerRadius="4"
+              BorderThickness="1"
+              BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="Auto"/>
+            </Grid.ColumnDefinitions>
+
+            <TextBlock Grid.Column="0" 
+                       Text="{x:Bind StatusMessage, Mode=OneWay}"
+                       VerticalAlignment="Center"
+                       Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
+
+            <TextBlock Grid.Column="1" 
+                       Text="{x:Bind ItemCountText, Mode=OneWay}"
+                       VerticalAlignment="Center"
+                       FontWeight="SemiBold"/>
+        </Grid>
+    </Grid>
+</Page>
